@@ -8,6 +8,8 @@
 
 > Une application moderne et intuitive permettant de **jouer deux pistes audio simultanément en écoute dichotique** : une piste dans l'oreille gauche et une autre dans l'oreille droite, avec réglages indépendants de volume et export du mix stéréo.
 
+![Aperçu de Dual-Audio](screenshot.png)
+
 ---
 
 ## ⚡ Téléchargement 1-Clic (Sans Python)
@@ -16,11 +18,11 @@ Pour les utilisateurs Windows :
 
 👉 **[Télécharger Dual-Audio.exe (Dernière Version)](https://github.com/je-tu-il/Dual-Audio/releases/latest)**
 
-1. Téléchargez `Dual-Audio.exe` ou l'archive portable `.zip`.
-2. Double-cliquez pour ouvrir.
-3. Branchez votre casque ou vos écouteurs.
+1. Téléchargez `Dual-Audio.exe`.
+2. Double-cliquez pour ouvrir (aucun installeur ni dépendance requis).
+3. Branchez votre casque ou vos écouteurs stéréo.
 4. Chargez votre piste gauche (bleue) et votre piste droite (rouge).
-5. Ajustez les volumes puis appuyez sur **▶ LECTURE** ou exportez en fichier unique !
+5. Ajustez les volumes puis appuyez sur **▶ LECTURE** ou exportez en fichier stéréo unique !
 
 ---
 
@@ -38,7 +40,7 @@ Pour les utilisateurs Windows :
 
 ### Prérequis
 - Python 3.9 ou supérieur
-- FFmpeg (recommandé pour l'export MP3 avec pydub)
+- FFmpeg (optionnel pour l'export MP3 avec pydub)
 
 ### Installation
 ```bash

@@ -1,11 +1,11 @@
 #!/usr/bin/env python3
+# -*- coding: utf-8 -*-
 """
 Dual-Audio — Dichotic Audio Mixer & Player
 Jouez deux fichiers audio différents simultanément (un dans chaque oreille) avec contrôle de volume indépendant et export stéréo mixé.
 """
 
 import os
-import subprocess
 import sys
 import threading
 import time
@@ -15,6 +15,7 @@ from tkinter import filedialog, messagebox
 
 # --- Patch Anti-Console Windows sous Windows ---
 if os.name == "nt":
+    import subprocess
     startupinfo = subprocess.STARTUPINFO()
     startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
     startupinfo.wShowWindow = subprocess.SW_HIDE
@@ -30,19 +31,18 @@ if os.name == "nt":
 
 import customtkinter as ctk
 import pygame
-from pydub import AudioSegment
 
-# Config UI
+# Configuration UI
 ctk.set_appearance_mode("Dark")
 ctk.set_default_color_theme("blue")
 
-# Init Audio Pygame
+# Initialisation Audio ultra-rapide
 try:
-    pygame.mixer.pre_init(44100, -16, 2, 2048)
+    pygame.mixer.pre_init(44100, -16, 2, 1024)
     pygame.init()
     pygame.mixer.set_num_channels(8)
 except Exception as e:
-    print(f"Avertissement initialisation audio : {e}")
+    pass
 
 
 class AudioDeck(ctk.CTkFrame):
@@ -58,36 +58,42 @@ class AudioDeck(ctk.CTkFrame):
         self.channel = None
         self.pydub_audio = None
 
-        self.loading_progress_val = 0.0
-        self.is_loading_active = False
-
-        self.configure(fg_color="#2b2b2b", corner_radius=15, border_width=2, border_color=color)
+        self.configure(fg_color="#232630", corner_radius=15, border_width=2, border_color=color, cursor="hand2")
         self.pack(side="left", fill="both", expand=True, padx=10, pady=10)
 
+        # En-tête du Deck
         self.lbl_title = ctk.CTkLabel(
             self, text=f"OREILLE {side_name}", font=("Roboto", 20, "bold"), text_color=color
         )
         self.lbl_title.pack(pady=(15, 5))
 
-        self.lbl_file = ctk.CTkLabel(self, text="Aucun fichier chargé", text_color="gray", wraplength=200)
-        self.lbl_file.pack(pady=5)
+        # Zone d'interaction clic direct pour charger
+        self.drop_card = ctk.CTkFrame(self, fg_color="#181a20", corner_radius=10, border_width=1, border_color="#333a4d")
+        self.drop_card.pack(fill="x", padx=15, pady=8)
 
-        self.progress = ctk.CTkProgressBar(self, width=180, height=12, progress_color=color)
-        self.progress.set(0)
-
-        self.btn_load = ctk.CTkButton(
-            self, text="Choisir un fichier", command=self.select_file, fg_color=color, hover_color="#333333"
+        self.lbl_file = ctk.CTkLabel(
+            self.drop_card,
+            text="📁 Cliquez pour choisir un fichier",
+            font=("Roboto", 12),
+            text_color="#94a3b8",
+            wraplength=220,
+            justify="center"
         )
-        self.btn_load.pack(pady=10)
+        self.lbl_file.pack(pady=15, padx=10)
 
-        self.lbl_vol = ctk.CTkLabel(self, text="Volume: 80%")
-        self.lbl_vol.pack(pady=(5, 0))
+        # Rendre toute la carte cliquable
+        for w in (self, self.drop_card, self.lbl_file, self.lbl_title):
+            w.bind("<Button-1>", lambda e: self.select_file())
+
+        self.lbl_vol = ctk.CTkLabel(self, text="Volume: 80%", font=("Roboto", 12, "bold"))
+        self.lbl_vol.pack(pady=(10, 0))
         self.slider = ctk.CTkSlider(self, from_=0, to=1, command=self.update_volume, progress_color=color)
         self.slider.set(0.8)
         self.slider.pack(pady=5, padx=20, fill="x")
 
     def select_file(self):
         path = filedialog.askopenfilename(
+            title=f"Choisir la musique pour l'oreille {self.side_name}",
             filetypes=[
                 ("Fichiers Audio", "*.mp3 *.wav *.ogg *.m4a *.flac *.aac *.wma"),
                 ("Tous les fichiers", "*.*"),
@@ -95,56 +101,36 @@ class AudioDeck(ctk.CTkFrame):
         )
         if path:
             self.filepath = path
-            threading.Thread(target=self.heavy_import, args=(path,), daemon=True).start()
-            self.start_animation()
+            self.load_audio_fast(path)
 
-    def start_animation(self):
-        self.is_loading_active = True
-        self.btn_load.configure(state="disabled", text="Chargement...")
-        self.progress.pack(pady=5)
-        self.loading_progress_val = 0.0
-        self.progress.set(0)
-        self.fake_progress_loop()
+    def load_audio_fast(self, path):
+        """Chargement instantané de pygame sans bloquer avec pydub"""
+        name = os.path.splitext(os.path.basename(path))[0]
+        self.lbl_file.configure(text=f"Chargement de {name[:20]}...", text_color="#60a5fa")
+        
+        def _bg_load():
+            try:
+                pg_sound = pygame.mixer.Sound(path)
+                self.after(0, lambda: self.on_audio_loaded(pg_sound, name, path))
+            except Exception as e:
+                err = str(e)
+                self.after(0, lambda: self.on_audio_error(err))
 
-    def fake_progress_loop(self):
-        if not self.is_loading_active:
-            return
+        threading.Thread(target=_bg_load, daemon=True).start()
 
-        if self.loading_progress_val < 0.85:
-            self.loading_progress_val += 0.02
-            self.progress.set(self.loading_progress_val)
-            self.after(30, self.fake_progress_loop)
-
-    def heavy_import(self, path):
-        try:
-            pg_sound = pygame.mixer.Sound(path)
-            pd_audio = AudioSegment.from_file(path)
-            name = os.path.splitext(os.path.basename(path))[0]
-            self.after(0, lambda: self.finish_loading(pg_sound, pd_audio, name))
-        except Exception as e:
-            err_msg = str(e)
-            self.after(0, lambda: self.stop_animation_error(err_msg))
-
-    def finish_loading(self, pg_sound, pd_audio, name):
-        self.is_loading_active = False
+    def on_audio_loaded(self, pg_sound, name, path):
         self.sound = pg_sound
-        self.pydub_audio = pd_audio
         self.filename_short = name
+        self.filepath = path
+        disp_name = name if len(name) < 26 else name[:14] + "..." + name[-8:]
+        self.lbl_file.configure(
+            text=f"🎵 {disp_name}\n✓ Prêt à jouer (Cliquez pour changer)",
+            text_color="#34d399"
+        )
 
-        self.progress.set(1.0)
-        disp_name = name if len(name) < 25 else name[:12] + "..." + name[-8:]
-        self.lbl_file.configure(text=disp_name, text_color="white")
-        self.after(400, self.reset_loading_ui)
-
-    def stop_animation_error(self, err_msg="Erreur"):
-        self.is_loading_active = False
-        self.reset_loading_ui()
-        self.lbl_file.configure(text="Erreur lecture fichier", text_color="#e74c3c")
+    def on_audio_error(self, err_msg):
+        self.lbl_file.configure(text="❌ Erreur de lecture", text_color="#f87171")
         messagebox.showerror("Erreur Audio", f"Impossible de charger le fichier audio :\n{err_msg}")
-
-    def reset_loading_ui(self):
-        self.progress.pack_forget()
-        self.btn_load.configure(state="normal", text="Changer de Musique")
 
     def update_volume(self, value):
         val_float = float(value)
@@ -155,35 +141,42 @@ class AudioDeck(ctk.CTkFrame):
             else:
                 self.channel.set_volume(0.0, val_float)
 
+    def get_pydub_segment(self):
+        """Chargé à la demande uniquement pour l'export"""
+        if self.filepath:
+            from pydub import AudioSegment
+            return AudioSegment.from_file(self.filepath)
+        return None
+
 
 class App(ctk.CTk):
     def __init__(self):
         super().__init__()
         self.title("Dual-Audio — Dichotic Audio Mixer")
-        self.geometry("780x520")
-        self.minsize(680, 480)
+        self.geometry("780x500")
+        self.minsize(680, 460)
         self.is_playing = False
 
         self.lbl_main = ctk.CTkLabel(self, text="MIXEUR DICHOTIQUE (DUAL AUDIO)", font=("Roboto", 22, "bold"))
-        self.lbl_main.pack(pady=15)
+        self.lbl_main.pack(pady=(15, 2))
 
         self.lbl_sub = ctk.CTkLabel(
             self,
             text="Écouteurs ou casque requis : un flux audio distinct dans chaque oreille.",
             font=("Roboto", 12),
-            text_color="#9ca3af"
+            text_color="#94a3b8"
         )
         self.lbl_sub.pack(pady=(0, 10))
 
         # Decks gauche / droite
         self.deck_area = ctk.CTkFrame(self, fg_color="transparent")
         self.deck_area.pack(fill="both", expand=True, padx=20)
-        self.deck_left = AudioDeck(self.deck_area, "GAUCHE", 0, "#3498db")
-        self.deck_right = AudioDeck(self.deck_area, "DROITE", 1, "#e74c3c")
+        self.deck_left = AudioDeck(self.deck_area, "GAUCHE", 0, "#38bdf8")
+        self.deck_right = AudioDeck(self.deck_area, "DROITE", 1, "#f43f5e")
 
         # Zone de commandes
-        self.ctrl_area = ctk.CTkFrame(self, height=80, fg_color="#1a1a1a", corner_radius=20)
-        self.ctrl_area.pack(fill="x", padx=20, pady=20)
+        self.ctrl_area = ctk.CTkFrame(self, height=75, fg_color="#181a20", corner_radius=16)
+        self.ctrl_area.pack(fill="x", padx=20, pady=15)
 
         self.ctrl_area.grid_columnconfigure(0, weight=0)
         self.ctrl_area.grid_columnconfigure(1, weight=1)
@@ -193,12 +186,12 @@ class App(ctk.CTk):
         self.btn_play = ctk.CTkButton(
             self.ctrl_area,
             text="▶ LECTURE",
-            font=("Arial", 16, "bold"),
+            font=("Arial", 15, "bold"),
             command=self.toggle_play,
-            height=45,
-            width=160,
-            fg_color="#2ecc71",
-            hover_color="#27ae60",
+            height=42,
+            width=150,
+            fg_color="#10b981",
+            hover_color="#059669",
         )
         self.btn_play.grid(row=0, column=0, padx=20, pady=15)
 
@@ -207,14 +200,14 @@ class App(ctk.CTk):
             text="💾 EXPORTER LE MIX",
             font=("Arial", 14, "bold"),
             command=self.export_mix,
-            height=45,
-            width=180,
-            fg_color="#9b59b6",
-            hover_color="#8e44ad",
+            height=42,
+            width=170,
+            fg_color="#8b5cf6",
+            hover_color="#7c3aed",
         )
         self.btn_export.grid(row=0, column=2, padx=(10, 10), pady=15)
 
-        self.lbl_status = ctk.CTkLabel(self.ctrl_area, text="", font=("Arial", 18, "bold"))
+        self.lbl_status = ctk.CTkLabel(self.ctrl_area, text="", font=("Arial", 14, "bold"))
         self.lbl_status.grid(row=0, column=3, padx=(0, 20), pady=15)
 
         self.bind("<space>", lambda e: self.toggle_play())
@@ -224,14 +217,12 @@ class App(ctk.CTk):
         if self.is_playing:
             pygame.mixer.stop()
             self.is_playing = False
-            self.btn_play.configure(text="▶ LECTURE", fg_color="#2ecc71", hover_color="#27ae60")
-            self.deck_left.btn_load.configure(state="normal")
-            self.deck_right.btn_load.configure(state="normal")
+            self.btn_play.configure(text="▶ LECTURE", fg_color="#10b981", hover_color="#059669")
         else:
             if not self.deck_left.sound or not self.deck_right.sound:
-                self.btn_play.configure(fg_color="#e74c3c")
-                self.show_status("Veuillez charger 2 pistes", "#e74c3c")
-                self.after(800, lambda: self.btn_play.configure(fg_color="#2ecc71"))
+                self.btn_play.configure(fg_color="#f43f5e")
+                self.show_status("Veuillez charger 2 pistes", "#f43f5e")
+                self.after(800, lambda: self.btn_play.configure(fg_color="#10b981"))
                 return
 
             pygame.mixer.stop()
@@ -247,13 +238,11 @@ class App(ctk.CTk):
                 self.deck_right.update_volume(self.deck_right.slider.get())
 
             self.is_playing = True
-            self.btn_play.configure(text="⏹ STOP", fg_color="#c0392b", hover_color="#7b241c")
-            self.deck_left.btn_load.configure(state="disabled")
-            self.deck_right.btn_load.configure(state="disabled")
+            self.btn_play.configure(text="⏹ STOP", fg_color="#ef4444", hover_color="#dc2626")
 
     def export_mix(self):
-        if not self.deck_left.pydub_audio or not self.deck_right.pydub_audio:
-            self.show_status("Chargez 2 fichiers d'abord", "#e74c3c")
+        if not self.deck_left.sound or not self.deck_right.sound:
+            self.show_status("Chargez 2 fichiers d'abord", "#f43f5e")
             return
 
         default_name = f"{self.deck_left.filename_short}_VS_{self.deck_right.filename_short}.mp3"
@@ -265,14 +254,17 @@ class App(ctk.CTk):
         if not save_path:
             return
 
-        self.btn_export.configure(text="Exportation en cours...", state="disabled")
+        self.btn_export.configure(text="Export en cours...", state="disabled")
         self.lbl_status.configure(text="")
         threading.Thread(target=self.process_export, args=(save_path,), daemon=True).start()
 
     def process_export(self, save_path):
         try:
-            sound_L = self.deck_left.pydub_audio
-            sound_R = self.deck_right.pydub_audio
+            sound_L = self.deck_left.get_pydub_segment()
+            sound_R = self.deck_right.get_pydub_segment()
+
+            if sound_L is None or sound_R is None:
+                raise Exception("Impossible de lire les flux audio pour l'export.")
 
             def get_gain(slider_val):
                 return 20 * math.log10(slider_val) if slider_val > 0 else -100
@@ -287,10 +279,10 @@ class App(ctk.CTk):
                 ext = "mp3"
 
             mixed.export(save_path, format=ext)
-            self.after(0, lambda: self.show_status("✔ Export Réussi", "#2ecc71"))
+            self.after(0, lambda: self.show_status("✔ Export Réussi", "#10b981"))
         except Exception as e:
             err = str(e)
-            self.after(0, lambda: self.show_status("✘ Erreur Export", "#e74c3c"))
+            self.after(0, lambda: self.show_status("✘ Erreur Export", "#f43f5e"))
             self.after(
                 0,
                 lambda: messagebox.showerror(

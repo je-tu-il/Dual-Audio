@@ -1,0 +1,34 @@
+{
+  "rules": {
+    "ms-teams.exe": {
+      "name": "Microsoft Teams",
+      "balance": 1.0,
+      "volume": 1.0,
+      "auto_apply": true
+    },
+    "vlc.exe": {
+      "name": "VLC media player",
+      "balance": 0.0,
+      "volume": 1.0,
+      "auto_apply": true
+    },
+    "teams.exe": {
+      "name": "teams.exe",
+      "balance": 1.0,
+      "volume": 1.0,
+      "auto_apply": true
+    },
+    "system": {
+      "name": "System",
+      "balance": 1.0,
+      "volume": 1.0,
+      "auto_apply": true
+    }
+  },
+  "settings": {
+    "auto_enforce": true,
+    "polling_interval_ms": 500,
+    "show_system_sounds": true,
+    "group_by_app": true
+  }
+}
