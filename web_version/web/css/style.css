@@ -949,3 +949,22 @@ input[type="range"]::-webkit-slider-thumb:hover {
     font-size: 40px;
     margin-bottom: 12px;
 }
+
+.app-title { font-size: clamp(1.65rem, 4.5vw, 2.4rem); letter-spacing: -.04em; }
+.app-header, .header-right, .diag-actions, .test-buttons, .scenarios-bar { gap: .625rem; }
+.app-subtitle { max-width: 55ch; line-height: 1.5; }
+.search-control { display: grid; gap: .375rem; min-width: 0; }
+.search-control label { font-size: .875rem; font-weight: 600; }
+#searchInput { width: 100%; min-height: 44px; }
+:where(button, a, input, select):focus-visible { outline: 2px solid #9edaf4; outline-offset: 3px; }
+.btn-test-sound, .btn-scenario, .btn-scenario-secondary { min-height: 44px; }
+@media (max-width: 680px) {
+  .app-header { flex-wrap: wrap; }
+  .test-buttons, .diag-actions, .scenarios-bar { flex-wrap: wrap; }
+  .test-buttons button { flex: 1 1 8rem; }
+  .headphone-stage { grid-template-columns: minmax(0, 1fr); }
+  .apps-grid { grid-template-columns: minmax(0, 1fr); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .pulse-dot { animation: none; }
+}
