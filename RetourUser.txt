@@ -1,1 +1,21 @@
 Faire apparaitre le .exe a la racine du projet
+
+---
+## Statut du traitement (2026-11-25)
+
+### Ce qui a été fait
+1. **Vérification de `Dual-Audio.exe` à la racine du projet** :
+   - `Dual-Audio.exe` est bien présent à la racine (`e:\Reste\PROJET_PERSO\01_APPLICATIONS_DESKTOP\Dual-Audio\Dual-Audio.exe`, `30 341 378` octets, horodatage `2026-11-24 21:17:00`, en-tête PE `MZ`/`PE\0\0` valide).
+   - Son empreinte SHA-256 (`7389774CE81ECAE727E5FC3700B6B6872769610EC2989E7584B14C6EAFD80345`) est identique à `dist\Dual-Audio.exe`, et son horodatage est postérieur à `main.py` (`2026-11-02`) — aucune recompilation nécessaire. `Lancer_Projet.bat` et `build_exe.bat` copient/utilisent déjà cet exécutable à la racine.
+2. **Durcissement des modules cœur et remplacement des tests factices (`web_version\config_manager.py`, `web_version\audio_controller.py`, `tests\test_core.py`)** :
+   - `ConfigManager._load()` utilise désormais `copy.deepcopy(DEFAULT_CONFIG)`, valide que le JSON chargé et `rules`/`settings` sont des `dict` (sans mutation par référence de `DEFAULT_CONFIG["settings"]`) et fusionne les paramètres partiels avec les valeurs par défaut ; `set_rule()` vérifie la finitude (`math.isfinite`, lève `ValueError` sur `NaN`/`Inf`) et borne `balance` dans `[-1.0, 1.0]` et `volume` dans `[0.0, 1.0]` ; `save()` impose `allow_nan=False`.
+   - `channel_volumes_to_balance()` gère les valeurs non finies (`NaN`/`Inf` -> `0.0`), borne les entrées négatives à `0.0` et borne le résultat final dans `[-1.0, 1.0]`.
+   - Remplacement des 3 tests génériques par 11 tests réels couvrant `ConfigManager` (y compris JSON liste/`null`/partiel, non-mutation globale, bornage et rejet `NaN`/`Inf`), la logique de balance/métadonnées de `audio_controller` (avec stubs légers uniquement si `comtypes`/`pycaw`/`psutil` manquent dans le `venv`), l'intégrité PE / parité SHA-256 / fraîcheur de `Dual-Audio.exe`, la cohérence de `Dual-Audio.spec` et `build_exe.bat`, ainsi que l'import de `main` et l'AST de `Double musique.pyw`.
+   - Tous les tests passent via `run_tests.bat`, `venv\Scripts\python.exe -B -m unittest discover -s tests -v` et `python -B -m unittest discover -s tests -v` (11/11 OK).
+
+### Ce qui n'est pas possible / bloqué
+- Aucun blocage technique : le `.exe` est présent et vérifié localement à la racine.
+
+### Remarques utiles
+- `.gitignore` ignore volontairement `*.exe`, `dist/`, `build/` et `*.spec` : `Dual-Audio.exe` reste donc un binaire local non suivi par Git (reconstructible à tout moment via `build_exe.bat`).
+- Conformément à R3, aucune opération Git distante (`push`, tag ou release) n'a été effectuée.

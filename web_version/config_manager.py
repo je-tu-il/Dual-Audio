@@ -4,7 +4,9 @@ Gère la persistance des règles d'assignation audio par oreille (gauche/droite)
 dans un fichier local JSON.
 """
 
+import copy
 import json
+import math
 import os
 import threading
 
@@ -41,25 +43,27 @@ class ConfigManager:
         self.config = self._load()
 
     def _load(self):
+        base = copy.deepcopy(DEFAULT_CONFIG)
         if os.path.exists(self.config_path):
             try:
                 with open(self.config_path, "r", encoding="utf-8") as f:
                     data = json.load(f)
-                    # S'assurer que les clés minimales existent
-                    if "rules" not in data:
-                        data["rules"] = {}
-                    if "settings" not in data:
-                        data["settings"] = DEFAULT_CONFIG["settings"]
-                    return data
+                if isinstance(data, dict):
+                    rules = data.get("rules")
+                    base["rules"] = rules if isinstance(rules, dict) else {}
+                    loaded_settings = data.get("settings")
+                    if isinstance(loaded_settings, dict):
+                        base["settings"].update(loaded_settings)
+                    return base
             except Exception as e:
                 print(f"[ConfigManager] Erreur chargement config: {e}")
-        return json.loads(json.dumps(DEFAULT_CONFIG))
+        return base
 
     def save(self):
         with self._lock:
             try:
                 with open(self.config_path, "w", encoding="utf-8") as f:
-                    json.dump(self.config, f, indent=2, ensure_ascii=False)
+                    json.dump(self.config, f, indent=2, ensure_ascii=False, allow_nan=False)
             except Exception as e:
                 print(f"[ConfigManager] Erreur sauvegarde config: {e}")
 
@@ -68,6 +72,20 @@ class ConfigManager:
             return self.config["rules"].get(process_name.lower())
 
     def set_rule(self, process_name, balance=None, volume=None, auto_apply=True, name=None):
+        parsed_balance = None
+        if balance is not None:
+            parsed_balance = float(balance)
+            if not math.isfinite(parsed_balance):
+                raise ValueError(f"Balance invalide (non finie): {balance}")
+            parsed_balance = round(max(-1.0, min(1.0, parsed_balance)), 3)
+
+        parsed_volume = None
+        if volume is not None:
+            parsed_volume = float(volume)
+            if not math.isfinite(parsed_volume):
+                raise ValueError(f"Volume invalide (non fini): {volume}")
+            parsed_volume = round(max(0.0, min(1.0, parsed_volume)), 3)
+
         with self._lock:
             key = process_name.lower()
             if key not in self.config["rules"]:
@@ -75,12 +93,12 @@ class ConfigManager:
                     "name": name or process_name,
                     "balance": 0.0,
                     "volume": 1.0,
-                    "auto_apply": auto_apply
+                    "auto_apply": True if auto_apply is None else bool(auto_apply)
                 }
-            if balance is not None:
-                self.config["rules"][key]["balance"] = round(float(balance), 3)
-            if volume is not None:
-                self.config["rules"][key]["volume"] = round(float(volume), 3)
+            if parsed_balance is not None:
+                self.config["rules"][key]["balance"] = parsed_balance
+            if parsed_volume is not None:
+                self.config["rules"][key]["volume"] = parsed_volume
             if auto_apply is not None:
                 self.config["rules"][key]["auto_apply"] = bool(auto_apply)
             if name:

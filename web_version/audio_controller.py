@@ -4,6 +4,7 @@ Permet de contrôler le volume et le routage des canaux (Gauche / Droite)
 par application sous Windows.
 """
 
+import math
 import time
 import os
 import threading
@@ -109,15 +110,25 @@ def balance_to_channel_volumes(balance: float):
 
 def channel_volumes_to_balance(left: float, right: float) -> float:
     """Convertit les volumes de canaux [Left, Right] en balance dans [-1.0, 1.0]."""
-    max_v = max(left, right)
+    try:
+        l_val = float(left)
+        r_val = float(right)
+    except (TypeError, ValueError):
+        return 0.0
+    if not (math.isfinite(l_val) and math.isfinite(r_val)):
+        return 0.0
+    l_val = max(0.0, l_val)
+    r_val = max(0.0, r_val)
+    max_v = max(l_val, r_val)
     if max_v < 0.001:
         return 0.0
-    if abs(left - right) < 0.02:
+    if abs(l_val - r_val) < 0.02:
         return 0.0
-    if left > right:
-        return round((right / left) - 1.0, 3)
+    if l_val > r_val:
+        bal = (r_val / l_val) - 1.0
     else:
-        return round(1.0 - (left / right), 3)
+        bal = 1.0 - (l_val / r_val)
+    return round(max(-1.0, min(1.0, bal)), 3)
 
 
 class AudioController:
