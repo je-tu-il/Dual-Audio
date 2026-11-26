@@ -1,4 +1,0 @@
-customtkinter>=5.2.0
-pygame>=2.5.0
-pydub>=0.25.1
-audioop-lts; python_version >= '3.13'

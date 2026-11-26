@@ -1,61 +1,23 @@
-# 🎧 Dual-Audio — Dichotic Audio Mixer & Player
+# Dual Audio Web
 
-[![Platform Windows](https://img.shields.io/badge/Platform-Windows%2010%20%7C%2011-blue.svg?logo=windows)](https://github.com/je-tu-il/Dual-Audio/releases)
-[![Release](https://img.shields.io/github/v/release/je-tu-il/Dual-Audio?color=success&include_prereleases)](https://github.com/je-tu-il/Dual-Audio/releases/latest)
-[![Python](https://img.shields.io/badge/Python-3.9%2B-brightgreen.svg?logo=python)](requirements.txt)
-[![UI: CustomTkinter](https://img.shields.io/badge/GUI-CustomTkinter-blueviolet.svg)](https://github.com/TomSchimansky/CustomTkinter)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+Un mixeur pour écouter deux pistes simultanément au casque, une par oreille, avec des volumes indépendants et un export WAV stéréo. Les fichiers sont traités dans le navigateur.
 
-> Une application moderne et intuitive permettant de **jouer deux pistes audio simultanément en écoute dichotique** : une piste dans l'oreille gauche et une autre dans l'oreille droite, avec réglages indépendants de volume et export du mix stéréo.
+## Ouvrir
 
-![Aperçu de Dual-Audio](screenshot.png)
+Sous Windows, double-cliquer sur [Lancer_Projet.bat](Lancer_Projet.bat). Sur les autres systèmes, ouvrir directement [pages/index.html](pages/index.html). Charger ses propres pistes ou utiliser les sons d’essai.
 
----
+## Tester
 
-## ⚡ Téléchargement 1-Clic (Sans Python)
+Lancer [run_tests.bat](run_tests.bat) sous Windows ou exécuter `node --test tests/web-audio.test.cjs` depuis la racine du dépôt.
 
-Pour les utilisateurs Windows :
+## Publier
 
-👉 **[Télécharger Dual-Audio.exe (Dernière Version)](https://github.com/je-tu-il/Dual-Audio/releases/latest)**
+Choisir **GitHub Actions** dans les réglages Pages, puis lancer le workflow **Dual Audio Web** depuis la branche principale. Voir les [tâches de publication](.github/WEB_TASKS.md).
 
-1. Téléchargez `Dual-Audio.exe`.
-2. Double-cliquez pour ouvrir (aucun installeur ni dépendance requis).
-3. Branchez votre casque ou vos écouteurs stéréo.
-4. Chargez votre piste gauche (bleue) et votre piste droite (rouge).
-5. Ajustez les volumes puis appuyez sur **▶ LECTURE** ou exportez en fichier stéréo unique !
+Le catalogue du portfolio héberge une copie de `pages/` dans `projects/dual-audio/`. Pour la synchroniser depuis la racine du dépôt, utiliser la commande PowerShell suivante.
 
----
-
-## ✨ Fonctionnalités
-
-- 🎧 **Écoute Dichotique Précise** : Séparation spatiale stricte 100% canal gauche / 100% canal droit.
-- 🎚️ **Mixage Dynamique en Direct** : Sliders de volume indépendants pour chaque oreille réactifs en temps réel.
-- 💾 **Export Stéréo (MP3 / WAV)** : Fusionnez vos deux musiques en un seul fichier stéréo avec application automatique des gains de volume choisis.
-- 🎨 **Interface Dark Mode Moderne** : Conçue avec CustomTkinter, animation fluide de chargement et gestion ergonomique des erreurs.
-- ⌨️ **Raccourci Espace** : Lancez ou coupez la lecture avec la barre d'espace.
-
----
-
-## 🛠️ Lancement pour Développeurs (Code Source)
-
-### Prérequis
-- Python 3.9 ou supérieur
-- FFmpeg (optionnel pour l'export MP3 avec pydub)
-
-### Installation
-```bash
-git clone https://github.com/je-tu-il/Dual-Audio.git
-cd Dual-Audio
-pip install -r requirements.txt
+```powershell
+Copy-Item pages/* ../../07_PORTFOLIO_ET_DOCS/je-tu-il.github.io/projects/dual-audio -Recurse -Force
 ```
 
-### Lancement
-```bash
-python main.py
-```
-
----
-
-## 📄 Licence
-
-Ce projet est sous licence MIT. Libre d'utilisation et de modification.
+[Licence MIT](LICENSE)

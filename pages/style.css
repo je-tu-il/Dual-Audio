@@ -1,0 +1,47 @@
+@import url("fonts/cormorant-garamond.css");
+@import url("fonts/dm-mono.css");
+
+:root {
+  color-scheme: light;
+  --paper: #efeadd;
+  --sheet: #fffaf0;
+  --ink: #212723;
+  --muted: #514e45;
+  --rule: #a49d8e;
+  --left: #315e79;
+  --right: #943f2e;
+  --leaf: #ced4ac;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: Georgia, serif;
+}
+* { box-sizing: border-box; }
+[hidden] { display: none !important; }
+body { margin: 0 auto; width: min(72rem, calc(100% - 2rem)); }
+.masthead { display: flex; justify-content: space-between; gap: 1rem; padding: 1rem 0; border-bottom: 1px solid; }
+.masthead a { color: inherit; font: .8rem 'DM Mono', monospace; }
+.masthead a:last-child { margin-left: auto; }
+.cover { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: end; padding: clamp(2rem, 6vw, 4.5rem) 0 1.5rem; gap: 1rem; }
+h1 { margin: 0; font: 700 clamp(4.5rem, 13vw, 9rem)/.75 'Cormorant Garamond', Georgia, serif; letter-spacing: -.065em; }
+h1 span { color: var(--right); }
+.cover p { margin: 0; max-width: 31rem; padding: .85rem 1rem; background: var(--leaf); line-height: 1.5; }
+.tracks { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .8rem; }
+.track, .console { background: var(--sheet); border: 1px solid var(--rule); padding: clamp(.9rem, 3vw, 1.5rem); overflow-wrap: anywhere; }
+.track { --channel: var(--left); border-top: .35rem solid var(--channel); }
+.track[data-track="1"] { --channel: var(--right); }
+h2 { margin: 0 0 .8rem; color: var(--channel); font: 700 2.5rem/1 'Cormorant Garamond', Georgia, serif; }
+label, button { font: .81rem/1.35 'DM Mono', monospace; }
+label { display: block; }
+label output, #time { float: right; }
+input { display: block; width: 100%; margin: .55rem 0; accent-color: var(--channel, var(--left)); }
+input::file-selector-button, button { padding: .62rem .7rem; border-radius: 0; border: 1px solid var(--ink); background: var(--sheet); color: var(--ink); cursor: pointer; }
+input::file-selector-button { margin-right: .6rem; font: inherit; }
+button:hover:enabled, #play { background: var(--ink); color: var(--sheet); }
+button:disabled { opacity: .5; cursor: default; }
+:focus-visible { outline: 3px solid var(--left); outline-offset: 3px; }
+.file-info { min-height: 1.4em; color: var(--muted); }
+.console { margin: .8rem 0 2rem; }
+.actions { display: flex; flex-wrap: wrap; gap: .55rem; }
+#status { margin-bottom: 0; line-height: 1.5; }
+@media (max-width: 39rem) { .tracks { grid-template-columns: minmax(0, 1fr); } }
+

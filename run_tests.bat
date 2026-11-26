@@ -1,8 +1,9 @@
 @echo off
-chcp 65001 > nul
-cd /d "%~dp0"
-if exist "venv\Scripts\python.exe" (
-    "%~dp0venv\Scripts\python.exe" -m unittest discover -s tests
-) else (
-    python -m unittest discover -s tests
+setlocal DisableDelayedExpansion
+where.exe node.exe >nul 2>&1
+if errorlevel 1 (
+    echo [ERREUR] Node.js est necessaire pour lancer les tests.
+    exit /b 1
 )
+node.exe --test "%~dp0tests\web-audio.test.cjs"
+exit /b %errorlevel%

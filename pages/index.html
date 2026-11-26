@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="fr">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Mélangez deux sources audio au casque et exportez votre mix stéréo en WAV.">
+  <title>Dual Audio — Mixeur stéréo</title>
+  <link rel="stylesheet" href="style.css">
+  <script defer src="audio.js"></script>
+  <script defer src="app.js"></script>
+</head>
+<body>
+  <header class="masthead">
+    <a id="back" href="https://je-tu-il.github.io/index.html#catalogue" hidden>← Portfolio</a>
+    <a href="https://github.com/je-tu-il/Dual-Audio">GitHub ↗</a>
+  </header>
+  <main>
+    <header class="cover">
+      <h1>Dual<br>Audio<span>.</span></h1>
+      <p>Deux pistes, une dans chaque oreille. Écoutez au casque puis exportez votre mix en WAV. Les fichiers sont traités dans le navigateur.</p>
+    </header>
+    <div class="tracks">
+      <section class="track" data-track="0">
+        <h2>Gauche</h2>
+        <label>Fichier audio gauche <input type="file" accept="audio/*,.wav,.mp3,.ogg,.m4a,.flac"></label>
+        <p class="file-info" aria-live="polite">Aucun fichier chargé</p>
+        <label>Volume gauche <output>75 %</output><input type="range" min="0" max="100" value="75"></label>
+        <button class="remove" type="button" disabled>Retirer la piste gauche</button>
+      </section>
+      <section class="track" data-track="1">
+        <h2>Droite</h2>
+        <label>Fichier audio droit <input type="file" accept="audio/*,.wav,.mp3,.ogg,.m4a,.flac"></label>
+        <p class="file-info" aria-live="polite">Aucun fichier chargé</p>
+        <label>Volume droit <output>75 %</output><input type="range" min="0" max="100" value="75"></label>
+        <button class="remove" type="button" disabled>Retirer la piste droite</button>
+      </section>
+    </div>
+    <section class="console" aria-label="Transport et export">
+      <label for="seek">Position <span id="time">0:00 / 0:00</span></label>
+      <input id="seek" type="range" min="0" max="0" step="0.01" value="0" disabled>
+      <div class="actions">
+        <button type="button" id="play" disabled>Lecture</button>
+        <button type="button" id="reset" disabled>Retour au début</button>
+        <button type="button" id="sample">Charger les sons d’essai</button>
+        <button type="button" id="export" disabled>Exporter le WAV</button>
+      </div>
+      <p id="status" role="status">Ajoutez un fichier par oreille ou chargez les sons d’essai.</p>
+    </section>
+  </main>
+</body>
+</html>
